@@ -1,0 +1,10 @@
+[package]
+name = "todo-frontend-rs"
+version = "0.1.0"
+description = "Todo List Using WASM"
+authors = ["misut <pkr5207@gmail.com>"]
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+yew = { version = "0.20.0", features = ["csr"] }
