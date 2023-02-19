@@ -1,20 +1,49 @@
 use yew::prelude::*;
 
+mod components;
+mod state;
+
+use components::entry::Entry;
+use components::header_input::HeaderInput;
+use state::{State, Todo};
+
 #[function_component]
 fn App() -> Html {
-    let counter = use_state(|| 0);
-    let onclick = {
-        let counter = counter.clone();
-        move |_| {
-            let value = *counter + 1;
-            counter.set(value);
-        }
+    let state = use_state(|| State { todos: vec![] });
+
+    let onadd = {
+        let state = state.clone();
+        Callback::from(move |description: String| {
+            let mut todos = state.todos.clone();
+            todos.push(Todo {id: todos.last().map(|todo| todo.id + 1).unwrap_or(1), description});
+            state.set(State { todos });
+        })
+    };
+
+    let onremove = {
+        let state = state.clone();
+        Callback::from(move |id: usize| {
+            let mut todos = state.todos.clone();
+            todos.retain(|todo| todo.id != id);
+            state.set(State { todos });
+        })
     };
 
     html! {
-        <div>
-            <button {onclick}>{ "+1" }</button>
-            <p>{ *counter }</p>
+        <div class="todo-wrapper">
+            <section class="todo-app">
+                <header class="header">
+                    <h1>{ "todos" }</h1>
+                    <HeaderInput {onadd} />
+                </header>
+                <section class="main">
+                    <ul class="todo-list">
+                        {for state.todos.iter().cloned().map(|todo| html! {<Entry {todo} onremove={onremove.clone()}/>})}
+                    </ul>
+                </section>
+                <footer class="footer">
+                </footer>
+            </section>
         </div>
     }
 }
