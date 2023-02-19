@@ -1,3 +1,4 @@
+use gloo_net::http::Request;
 use yew::prelude::*;
 
 mod components;
@@ -10,6 +11,22 @@ use state::{State, Todo};
 #[function_component]
 fn App() -> Html {
     let state = use_state(|| State { todos: vec![] });
+    {
+        let state = state.clone();
+        use_effect_with_deps(move |_| {
+            let state = state.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let fetched_todos: Vec<Todo> = Request::get("http://localhost:8000/get")
+                    .send()
+                    .await
+                    .unwrap()
+                    .json::<Vec<Todo>>()
+                    .await
+                    .unwrap();
+                state.set(State { todos: fetched_todos });
+            });
+        }, ());
+    }
 
     let onadd = {
         let state = state.clone();
