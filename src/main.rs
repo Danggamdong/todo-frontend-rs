@@ -24,7 +24,6 @@ fn App() -> Html {
                     .await
                     .unwrap();
                 state.set(State { todos: fetched_todos });
-                println!("Hello");
             });
             || ()
         }, ());
