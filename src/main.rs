@@ -16,15 +16,17 @@ fn App() -> Html {
         use_effect_with_deps(move |_| {
             let state = state.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                let fetched_todos: Vec<Todo> = Request::get("http://localhost:8000/get")
+                let fetched_todos: Vec<Todo> = Request::get("/Todolist?name=TestUser")
                     .send()
                     .await
                     .unwrap()
-                    .json::<Vec<Todo>>()
+                    .json()
                     .await
                     .unwrap();
                 state.set(State { todos: fetched_todos });
+                println!("Hello");
             });
+            || ()
         }, ());
     }
 
