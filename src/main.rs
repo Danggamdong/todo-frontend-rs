@@ -13,27 +13,35 @@ fn App() -> Html {
     let state = use_state(|| State { todos: vec![] });
     {
         let state = state.clone();
-        use_effect_with_deps(move |_| {
-            let state = state.clone();
-            wasm_bindgen_futures::spawn_local(async move {
-                let fetched_todos: Vec<Todo> = Request::get("/Todolist?name=TestUser")
-                    .send()
-                    .await
-                    .unwrap()
-                    .json()
-                    .await
-                    .unwrap();
-                state.set(State { todos: fetched_todos });
-            });
-            || ()
-        }, ());
+        use_effect_with_deps(
+            move |_| {
+                let state = state.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    let fetched_todos: Vec<Todo> = Request::get("/Todolist?name=TestUser")
+                        .send()
+                        .await
+                        .unwrap()
+                        .json()
+                        .await
+                        .unwrap();
+                    state.set(State {
+                        todos: fetched_todos,
+                    });
+                });
+                || ()
+            },
+            (),
+        );
     }
 
     let onadd = {
         let state = state.clone();
         Callback::from(move |description: String| {
             let mut todos = state.todos.clone();
-            todos.push(Todo {id: todos.last().map(|todo| todo.id + 1).unwrap_or(1), description});
+            todos.push(Todo {
+                id: todos.last().map(|todo| todo.id + 1).unwrap_or(1),
+                description,
+            });
             state.set(State { todos });
         })
     };
