@@ -1,4 +1,5 @@
 use gloo_net::http::Request;
+use std::time::{SystemTime, UNIX_EPOCH};
 use yew::prelude::*;
 
 mod components;
@@ -17,7 +18,7 @@ fn App() -> Html {
             move |_| {
                 let state = state.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let fetched_todos: Vec<Todo> = Request::get("/Todolist?name=TestUser")
+                    let fetched_todos: Vec<Todo> = Request::get("/todos")
                         .send()
                         .await
                         .unwrap()
@@ -38,11 +39,18 @@ fn App() -> Html {
         let state = state.clone();
         Callback::from(move |description: String| {
             let mut todos = state.todos.clone();
-            todos.push(Todo {
+            let todo = Todo {
                 id: todos.last().map(|todo| todo.id + 1).unwrap_or(1),
-                description,
-            });
+                description: description,
+                created_at: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                is_finished: false,
+            };
+            todos.push(todo.clone());
             state.set(State { todos });
+
+            wasm_bindgen_futures::spawn_local(async move {
+                Request::post("/todos").body(todo.to_js_value());
+            });
         })
     };
 
