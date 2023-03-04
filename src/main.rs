@@ -1,5 +1,5 @@
+use chrono::prelude::*;
 use gloo_net::http::Request;
-use std::time::{SystemTime, UNIX_EPOCH};
 use yew::prelude::*;
 
 mod components;
@@ -18,16 +18,18 @@ fn App() -> Html {
             move |_| {
                 let state = state.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let fetched_todos: Vec<Todo> = Request::get("/todos")
+                    let response = Request::get("/todos")
                         .send()
                         .await
-                        .unwrap()
-                        .json()
-                        .await
-                        .unwrap();
-                    state.set(State {
-                        todos: fetched_todos,
-                    });
+                        .expect("Failed to request");
+
+                    let fetched_todos: Vec<Todo> = if response.ok() {
+                        response.json().await.expect("Failed to serialize `Todo`")
+                    } else {
+                        panic!("Failed to get response")
+                    };
+
+                    state.set(State {todos: fetched_todos});
                 });
                 || ()
             },
@@ -42,14 +44,14 @@ fn App() -> Html {
             let todo = Todo {
                 id: todos.last().map(|todo| todo.id + 1).unwrap_or(1),
                 description: description,
-                created_at: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                created_at: Utc::now().timestamp(),
                 is_finished: false,
             };
             todos.push(todo.clone());
             state.set(State { todos });
 
             wasm_bindgen_futures::spawn_local(async move {
-                Request::post("/todos").body(todo.to_js_value());
+                Request::post("/todos").header("Content-Type", "application/json").body(todo.to_js_value());
             });
         })
     };

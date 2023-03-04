@@ -12,7 +12,7 @@ pub struct State {
 pub struct Todo {
     pub id: usize,
     pub description: String,
-    pub created_at: u64,
+    pub created_at: i64,
     pub is_finished: bool,
 }
 
