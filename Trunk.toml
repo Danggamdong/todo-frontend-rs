@@ -1,0 +1,11 @@
+[build]
+target = "index.html"
+dist = "dist"
+
+[serve]
+address = "0.0.0.0"
+port = 23456
+
+[[proxy]]
+backend = "http://misut.synology.me:12345/"
+rewrite = "/todos/"
