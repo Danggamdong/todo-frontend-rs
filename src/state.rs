@@ -22,4 +22,3 @@ impl Todo {
         JsValue::from_serde(self).unwrap()
     }
 }
-

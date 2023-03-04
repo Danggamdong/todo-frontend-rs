@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use gloo_net::http::Request;
+use gloo_net::http::{Request, RequestMode};
 use stylist::yew::*;
 use yew::prelude::*;
 
@@ -9,7 +9,7 @@ mod state;
 
 use components::entry::Entry;
 use components::header_input::HeaderInput;
-use contexts::theme::{ThemeProvider, use_theme};
+use contexts::theme::{use_theme, ThemeProvider};
 use state::{State, Todo};
 
 #[styled_component]
@@ -26,13 +26,14 @@ fn Main() -> Html {
                         .await
                         .expect("Failed to request");
 
-                    let fetched_todos: Vec<Todo> = if response.ok() {
-                        response.json().await.expect("Failed to serialize `Todo`")
-                    } else {
-                        panic!("Failed to get response")
-                    };
+                    assert_eq!(response.status(), 200);
 
-                    state.set(State {todos: fetched_todos});
+                    let fetched_todos: Vec<Todo> =
+                        response.json().await.expect("Failed to serialize `Todo`");
+
+                    state.set(State {
+                        todos: fetched_todos,
+                    });
                 });
                 || ()
             },
@@ -53,8 +54,16 @@ fn Main() -> Html {
             todos.push(todo.clone());
             state.set(State { todos });
 
+            let request = Request::post("http://misut.synology.me:12345/todos")
+                .mode(RequestMode::NoCors)
+                .json(&todo)
+                .expect("Failed to serialize todo");
+
             wasm_bindgen_futures::spawn_local(async move {
-                Request::post("/todos").header("Content-Type", "application/json").body(todo.to_js_value());
+                request
+                    .send()
+                    .await
+                    .expect("Failed to request for adding todo");
             });
         })
     };

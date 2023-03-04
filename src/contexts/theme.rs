@@ -39,7 +39,7 @@ impl ThemeKind {
 
 #[derive(Clone)]
 pub struct ThemeContext {
-    inner: UseStateHandle<ThemeKind>
+    inner: UseStateHandle<ThemeKind>,
 }
 
 impl ThemeContext {
